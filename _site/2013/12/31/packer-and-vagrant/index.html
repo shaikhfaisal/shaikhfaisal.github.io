@@ -1,0 +1,238 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>fais.al</title>
+
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <h1><a href="http://fais.al/">Faisal</a></h1>
+            <p>not for public consumption</p>
+
+
+            <p class="view"><a href="https://github.com/shaikhfaisal">View My GitHub Profile</a></p>
+
+        </header>
+    <section>
+        <h3 id="using-packer-to-build-vagrant-base-boxes">Using packer to build vagrant base boxes</h3>
+<p>I recently needed to build a Vagrant base box and but did not want to use the boxes that were pre-built and available on the internet. 
+I wanted to build my own boxes from the original distribution ISOs. This is possible to do manually but is a laborious and slow process. 
+Enter <a href="packer.io">Packer</a> -  a tool from the developers of Vagrant that automates this so you can go from original distribution ISO to
+vagrant box by typing in one command. This lends itself to automation which is almost always a good thing.</p>
+
+<p>This is my vanilla packer json file. It basically configures packer to do the following:</p>
+
+<ol>
+  <li>Request a compute resource from VirtualBox</li>
+  <li>Download and verify the distribution iso</li>
+  <li>Handover to preseed to automate the installation of the distribution</li>
+  <li>After installation, do some basic shell provisioning and then package the compute resource as a Vagrant box</li>
+</ol>
+
+<p><strong>template.json</strong></p>
+
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span>
+  <span class="s2">&quot;description&quot;</span> <span class="o">:</span> <span class="s2">&quot;Ubuntu LTS Trusty Tahr&quot;</span><span class="p">,</span>
+
+  <span class="s2">&quot;variables&quot;</span> <span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;vm_name&quot;</span><span class="o">:</span> <span class="s2">&quot;ubuntu-14.04-LTS.vagrant.box&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;vm_domain&quot;</span><span class="o">:</span> <span class="s2">&quot;example.com&quot;</span>
+  <span class="p">},</span>
+  
+  <span class="s2">&quot;builders&quot;</span><span class="o">:</span>  <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;virtualbox-iso&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;guest_os_type&quot;</span><span class="o">:</span> <span class="s2">&quot;Ubuntu_64&quot;</span><span class="p">,</span>
+  
+      <span class="s2">&quot;iso_url&quot;</span><span class="o">:</span> <span class="s2">&quot;http://releases.ubuntu.com/trusty/ubuntu-14.04-server-amd64.iso&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;iso_checksum&quot;</span><span class="o">:</span> <span class="s2">&quot;01545fa976c8367b4f0d59169ac4866c&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;iso_checksum_type&quot;</span><span class="o">:</span> <span class="s2">&quot;md5&quot;</span><span class="p">,</span>
+  
+      <span class="s2">&quot;shutdown_command&quot;</span><span class="o">:</span> <span class="s2">&quot;echo &#39;halt -p&#39; &gt; shutdown.sh; echo &#39;vagrant&#39;|sudo -S sh &#39;shutdown.sh&#39;&quot;</span><span class="p">,</span>
+  
+      <span class="s2">&quot;disk_size&quot;</span><span class="o">:</span> <span class="mi">20000</span><span class="p">,</span>
+  
+      <span class="s2">&quot;format&quot;</span><span class="o">:</span> <span class="s2">&quot;ovf&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;output_directory&quot;</span><span class="o">:</span> <span class="s2">&quot;vms/{{user `vm_name`}}&quot;</span><span class="p">,</span> 
+ 
+      <span class="s2">&quot;headless&quot;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+  
+      <span class="s2">&quot;http_directory&quot;</span><span class="o">:</span> <span class="s2">&quot;httpdir&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;http_port_min&quot;</span><span class="o">:</span> <span class="mi">10082</span><span class="p">,</span>
+      <span class="s2">&quot;http_port_max&quot;</span><span class="o">:</span> <span class="mi">10089</span><span class="p">,</span>
+  
+      <span class="s2">&quot;ssh_host_port_min&quot;</span><span class="o">:</span> <span class="mi">2222</span><span class="p">,</span>
+      <span class="s2">&quot;ssh_host_port_max&quot;</span><span class="o">:</span> <span class="mi">2229</span><span class="p">,</span>
+      <span class="s2">&quot;ssh_username&quot;</span><span class="o">:</span> <span class="s2">&quot;vagrant&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;ssh_password&quot;</span><span class="o">:</span> <span class="s2">&quot;vagrant&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;ssh_port&quot;</span><span class="o">:</span> <span class="mi">22</span><span class="p">,</span>
+      <span class="s2">&quot;ssh_wait_timeout&quot;</span><span class="o">:</span> <span class="s2">&quot;90m&quot;</span><span class="p">,</span>
+  
+      <span class="s2">&quot;vm_name&quot;</span><span class="o">:</span> <span class="s2">&quot;{{user `vm_name`}}&quot;</span><span class="p">,</span>
+
+      <span class="s2">&quot;boot_wait&quot;</span><span class="o">:</span> <span class="s2">&quot;6s&quot;</span><span class="p">,</span>
+
+      <span class="s2">&quot;boot_command&quot;</span><span class="o">:</span>  <span class="p">[</span>
+
+        <span class="s2">&quot;&lt;esc&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;esc&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;enter&gt;&lt;wait&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;/install/vmlinuz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; auto&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; console-setup/ask_detect=false&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; console-setup/layoutcode=uk&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; console-setup/modelcode=pc105&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; debconf/frontend=noninteractive&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; debian-installer=en_GB&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; fb=false&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; initrd=/install/initrd.gz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; kbd-chooser/method=us&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; keyboard-configuration/layout=UK&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; keyboard-configuration/variant=UK&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; locale=en_US&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; netcfg/get_domain={{user `vm_domain`}}&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; netcfg/get_hostname=vagrant&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; noapic&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ubuntu-14.04/preseed.cfg&quot;</span><span class="p">,</span>
+        <span class="s2">&quot; -- &quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;enter&gt;&quot;</span>
+      <span class="p">],</span>
+      <span class="s2">&quot;vboxmanage&quot;</span><span class="o">:</span> <span class="p">[</span>
+        <span class="p">[</span><span class="s2">&quot;modifyvm&quot;</span><span class="p">,</span> <span class="s2">&quot;{{.Name}}&quot;</span><span class="p">,</span> <span class="s2">&quot;--memory&quot;</span><span class="p">,</span> <span class="s2">&quot;1500&quot;</span><span class="p">]</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">],</span>
+
+  <span class="s2">&quot;provisioners&quot;</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+       <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;shell&quot;</span><span class="p">,</span>
+       <span class="s2">&quot;script&quot;</span><span class="o">:</span> <span class="s2">&quot;provisioners/shell/trusty_vagrant_setup_script.sh&quot;</span>
+     <span class="p">}</span>
+  <span class="p">],</span>
+
+  <span class="s2">&quot;post-processors&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;vagrant&quot;</span><span class="p">]</span>
+
+
+<span class="p">}</span></code></pre></div>
+
+<p>This is my associated preseed file:</p>
+
+<p><strong>httpdir/preseed.cfg:</strong></p>
+
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">debian</span><span class="o">-</span><span class="nx">installer</span><span class="o">/</span><span class="nx">language</span> <span class="nx">string</span> <span class="nx">en</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">debian</span><span class="o">-</span><span class="nx">installer</span><span class="o">/</span><span class="nx">country</span> <span class="nx">string</span> <span class="nx">GB</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">debian</span><span class="o">-</span><span class="nx">installer</span><span class="o">/</span><span class="nx">locale</span> <span class="nx">string</span> <span class="nx">en_GB</span><span class="p">.</span><span class="nx">UTF</span><span class="o">-</span><span class="mi">8</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">localechooser</span><span class="o">/</span><span class="nx">preferred</span><span class="o">-</span><span class="nx">locale</span> <span class="nx">string</span> <span class="nx">en_GB</span><span class="p">.</span><span class="nx">UTF</span><span class="o">-</span><span class="mi">8</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">localechooser</span><span class="o">/</span><span class="nx">supported</span><span class="o">-</span><span class="nx">locales</span> <span class="nx">en_GB</span><span class="p">.</span><span class="nx">UTF</span><span class="o">-</span><span class="mi">8</span>
+
+<span class="err">#</span> <span class="nx">Including</span> <span class="nx">keyboards</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">console</span><span class="o">-</span><span class="nx">setup</span><span class="o">/</span><span class="nx">ask_detect</span> <span class="kr">boolean</span> <span class="kc">false</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">keyboard</span><span class="o">-</span><span class="nx">configuration</span><span class="o">/</span><span class="nx">variant</span> <span class="nx">select</span> <span class="nx">uk</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">keyboard</span><span class="o">-</span><span class="nx">configuration</span><span class="o">/</span><span class="nx">modelcode</span> <span class="nx">string</span> <span class="nx">pc105</span>
+
+<span class="err">#</span> <span class="nx">Just</span> <span class="nx">roll</span> <span class="kd">with</span> <span class="nx">it</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">netcfg</span><span class="o">/</span><span class="nx">get_hostname</span> <span class="nx">string</span> <span class="k">this</span><span class="o">-</span><span class="nx">host</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">netcfg</span><span class="o">/</span><span class="nx">get_domain</span> <span class="nx">string</span> <span class="k">this</span><span class="o">-</span><span class="nx">host</span>
+
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">time</span><span class="o">/</span><span class="nx">zone</span> <span class="nx">string</span> <span class="nx">UTC</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">clock</span><span class="o">-</span><span class="nx">setup</span><span class="o">/</span><span class="nx">utc</span><span class="o">-</span><span class="nx">auto</span> <span class="kr">boolean</span> <span class="kc">true</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">clock</span><span class="o">-</span><span class="nx">setup</span><span class="o">/</span><span class="nx">utc</span> <span class="kr">boolean</span> <span class="kc">true</span>
+
+<span class="err">#</span> <span class="nx">Choices</span><span class="o">:</span> <span class="nx">Dialog</span><span class="p">,</span> <span class="nx">Readline</span><span class="p">,</span> <span class="nx">Gnome</span><span class="p">,</span> <span class="nx">Kde</span><span class="p">,</span> <span class="nx">Editor</span><span class="p">,</span> <span class="nx">Noninteractive</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">debconf</span> <span class="nx">debconf</span><span class="o">/</span><span class="nx">frontend</span> <span class="nx">select</span> <span class="nx">Noninteractive</span>
+
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">pkgsel</span><span class="o">/</span><span class="nx">install</span><span class="o">-</span><span class="nx">language</span><span class="o">-</span><span class="nx">support</span> <span class="kr">boolean</span> <span class="kc">false</span>
+<span class="nx">tasksel</span> <span class="nx">tasksel</span><span class="o">/</span><span class="nx">first</span> <span class="nx">multiselect</span> <span class="nx">standard</span><span class="p">,</span> <span class="nx">ubuntu</span><span class="o">-</span><span class="nx">server</span>
+
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">netcfg</span><span class="o">/</span><span class="nx">choose_interface</span> <span class="nx">select</span> <span class="nx">auto</span>
+
+<span class="err">#</span> <span class="nx">Stuck</span> <span class="nx">between</span> <span class="nx">a</span> <span class="nx">rock</span> <span class="nx">and</span> <span class="nx">a</span> <span class="nx">HDD</span> <span class="nx">place</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">auto</span><span class="o">/</span><span class="nx">method</span> <span class="nx">string</span> <span class="nx">lvm</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">lvm</span><span class="o">/</span><span class="nx">confirm</span> <span class="kr">boolean</span> <span class="kc">true</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">lvm</span><span class="o">/</span><span class="nx">device_remove_lvm</span> <span class="kr">boolean</span> <span class="kc">true</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">auto</span><span class="o">/</span><span class="nx">choose_recipe</span> <span class="nx">select</span> <span class="nx">atomic</span>
+
+<span class="err">###</span> <span class="nx">Partitioning</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">auto</span><span class="o">/</span><span class="nx">method</span> <span class="nx">string</span> <span class="nx">lvm</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">lvm</span><span class="o">/</span><span class="nx">device_remove_lvm</span> <span class="kr">boolean</span> <span class="kc">true</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">md</span><span class="o">/</span><span class="nx">device_remove_md</span> <span class="kr">boolean</span> <span class="kc">true</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">lvm</span><span class="o">/</span><span class="nx">confirm</span> <span class="kr">boolean</span> <span class="kc">true</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">lvm</span><span class="o">/</span><span class="nx">confirm_nooverwrite</span> <span class="kr">boolean</span> <span class="kc">true</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">/</span><span class="nx">choose_partition</span> <span class="nx">select</span> <span class="nx">finish</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">auto</span><span class="o">-</span><span class="nx">lvm</span><span class="o">/</span><span class="nx">guided_size</span> <span class="nx">string</span> <span class="nx">max</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">-</span><span class="nx">auto</span><span class="o">/</span><span class="nx">choose_recipe</span> <span class="nx">select</span> <span class="nx">atomic</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">/</span><span class="nx">default_filesystem</span> <span class="nx">string</span> <span class="nx">ext4</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">/</span><span class="nx">confirm_write_new_label</span> <span class="kr">boolean</span> <span class="kc">true</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">/</span><span class="nx">confirm</span> <span class="kr">boolean</span> <span class="kc">true</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">partman</span><span class="o">/</span><span class="nx">confirm_nooverwrite</span> <span class="kr">boolean</span> <span class="kc">true</span>
+
+<span class="err">#</span> <span class="nx">No</span> <span class="nx">proxy</span><span class="p">,</span> <span class="nx">plx</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">mirror</span><span class="o">/</span><span class="nx">http</span><span class="o">/</span><span class="nx">proxy</span> <span class="nx">string</span>
+
+<span class="err">#</span> <span class="nx">Root</span> <span class="nx">password</span><span class="p">,</span> <span class="nx">either</span> <span class="k">in</span> <span class="nx">clear</span> <span class="nx">text</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">passwd</span><span class="o">/</span><span class="nx">root</span><span class="o">-</span><span class="nx">password</span> <span class="nx">password</span> <span class="nx">vagrant</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">passwd</span><span class="o">/</span><span class="nx">root</span><span class="o">-</span><span class="nx">password</span><span class="o">-</span><span class="nx">again</span> <span class="nx">password</span> <span class="nx">vagrant</span>
+
+<span class="err">#</span> <span class="nx">Default</span> <span class="nx">user</span><span class="p">,</span> <span class="nx">change</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">passwd</span><span class="o">/</span><span class="nx">user</span><span class="o">-</span><span class="nx">fullname</span> <span class="nx">string</span> <span class="nx">vagrant</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">passwd</span><span class="o">/</span><span class="nx">username</span> <span class="nx">string</span> <span class="nx">vagrant</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">passwd</span><span class="o">/</span><span class="nx">user</span><span class="o">-</span><span class="nx">password</span> <span class="nx">password</span> <span class="nx">vagrant</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">passwd</span><span class="o">/</span><span class="nx">user</span><span class="o">-</span><span class="nx">password</span><span class="o">-</span><span class="nx">again</span> <span class="nx">password</span> <span class="nx">vagrant</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">user</span><span class="o">-</span><span class="nx">setup</span><span class="o">/</span><span class="nx">encrypt</span><span class="o">-</span><span class="nx">home</span> <span class="kr">boolean</span> <span class="kc">false</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">user</span><span class="o">-</span><span class="nx">setup</span><span class="o">/</span><span class="nx">allow</span><span class="o">-</span><span class="nx">password</span><span class="o">-</span><span class="nx">weak</span> <span class="kr">boolean</span> <span class="kc">true</span>
+
+<span class="err">#</span> <span class="nx">No</span> <span class="nx">language</span> <span class="nx">support</span> <span class="nx">packages</span><span class="p">.</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">pkgsel</span><span class="o">/</span><span class="nx">install</span><span class="o">-</span><span class="nx">language</span><span class="o">-</span><span class="nx">support</span> <span class="kr">boolean</span> <span class="kc">false</span>
+
+<span class="err">#</span> <span class="nx">Individual</span> <span class="nx">additional</span> <span class="nx">packages</span> <span class="nx">to</span> <span class="nx">install</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">pkgsel</span><span class="o">/</span><span class="nx">include</span> <span class="nx">string</span> <span class="nx">build</span><span class="o">-</span><span class="nx">essential</span> <span class="nx">ssh</span> <span class="nx">git</span> <span class="nx">vim</span> <span class="nx">ansible</span> <span class="nx">python</span><span class="o">-</span><span class="nx">paramiko</span>
+
+<span class="err">#</span><span class="nx">For</span> <span class="nx">the</span> <span class="nx">update</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">pkgsel</span><span class="o">/</span><span class="nx">update</span><span class="o">-</span><span class="nx">policy</span> <span class="nx">select</span> <span class="nx">none</span>
+
+<span class="err">#</span> <span class="nx">Whether</span> <span class="nx">to</span> <span class="nx">upgrade</span> <span class="nx">packages</span> <span class="nx">after</span> <span class="nx">debootstrap</span><span class="p">.</span>
+<span class="err">#</span> <span class="nx">Allowed</span> <span class="nx">values</span><span class="o">:</span> <span class="nx">none</span><span class="p">,</span> <span class="nx">safe</span><span class="o">-</span><span class="nx">upgrade</span><span class="p">,</span> <span class="nx">full</span><span class="o">-</span><span class="nx">upgrade</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">pkgsel</span><span class="o">/</span><span class="nx">upgrade</span> <span class="nx">select</span> <span class="nx">safe</span><span class="o">-</span><span class="nx">upgrade</span>
+
+<span class="err">#</span> <span class="nx">Give</span> <span class="nx">vagrant</span> <span class="kr">super</span> <span class="nx">powers</span> <span class="o">-</span> <span class="k">this</span> <span class="nx">should</span> <span class="nx">get</span> <span class="nx">removed</span> <span class="nx">by</span> <span class="nx">the</span> <span class="nx">provisioning</span> <span class="nx">script</span>
+<span class="err">#</span><span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">preseed</span><span class="o">/</span><span class="nx">late_command</span> <span class="nx">string</span> <span class="k">in</span><span class="o">-</span><span class="nx">target</span> <span class="nx">echo</span> <span class="s1">&#39;Defaults:%sudo !requiretty&#39;</span> <span class="o">&gt;&gt;</span> <span class="err">/target/etc/sudoers.d/sudo ; \</span>
+<span class="err">#</span>                                <span class="k">in</span><span class="o">-</span><span class="nx">target</span> <span class="nx">echo</span> <span class="s1">&#39;vagrant ALL=(ALL) NOPASSWD: ALL&#39;</span> <span class="o">&gt;&gt;</span> <span class="err">/target/etc/sudoers.d/sudo</span>
+
+
+<span class="err">#</span> <span class="nx">Go</span> <span class="nx">grub</span><span class="p">,</span> <span class="nx">go</span><span class="o">!</span>
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">grub</span><span class="o">-</span><span class="nx">installer</span><span class="o">/</span><span class="nx">only_debian</span> <span class="kr">boolean</span> <span class="kc">true</span>
+
+<span class="nx">d</span><span class="o">-</span><span class="nx">i</span> <span class="nx">finish</span><span class="o">-</span><span class="nx">install</span><span class="o">/</span><span class="nx">reboot_in_progress</span> <span class="nx">note</span></code></pre></div>
+
+<p>I like how packer uses established tools like preseed and kickstarter and doesn’t try to re-invent the wheel.</p>
+
+<p>To make these examples work, your file layout needs to be as below:</p>
+
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">template</span><span class="p">.</span><span class="nx">json</span>
+<span class="o">|--</span><span class="nx">httpdir</span>
+   <span class="o">|--</span><span class="nx">preseed</span><span class="p">.</span><span class="nx">cfg</span></code></pre></div>
+
+<p>Download packer from <a href="packer.io">packer.io</a> and then run the following command from your shell</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">./packer build test.json</code></pre></div>
+
+
+    </section>
+        <footer>
+            <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+        </footer>
+    </div>
+
+    <script src="/javascripts/scale.fix.js"></script>
+
+</body>
+</html>
