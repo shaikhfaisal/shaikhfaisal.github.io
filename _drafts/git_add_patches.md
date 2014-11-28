@@ -9,12 +9,12 @@ excerpt: <p>Submitting meaningful commits to your repository makes it easier for
 ---
 ### git add -i
 
-Submitting meaningful commits to your repository makes it easier for your future self and team-mates from understanding how and why changes were 
+Submitting meaningful commits to your repository makes it easier for your future self and team-mates in understanding how and why changes were 
 brought in. Instead of one gigantic commit that includes all the changes for a feature, splitting up your commits into a single commit per 
 feature allows you to look at meaningful diffs at a commit level. This makes code reviews go smoother as you won't have to remember why you
 made a change.
 
-Git has the excellent interactive feature which allows you to select a set of changes called a hunk to include in the commit. Git will allow 
+Git has the excellent interactive feature which allows you to select a set of changes called a hunk to include in a commit. Git will allow 
 you to split the hunk into smaller pieces to give you a degree of control over which changes to include. However splitting hunks has its limits.
 To get really picky about what goes into the commit, get into patch mode. This allows you line by line control.
 

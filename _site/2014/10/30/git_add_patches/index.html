@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>fais.al</title>
+
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <h1><a href="http://fais.al/">Faisal</a></h1>
+            <p>not for public consumption</p>
+
+
+            <p class="view"><a href="https://github.com/shaikhfaisal">View My GitHub Profile</a></p>
+
+        </header>
+    <section>
+        <h3 id="git-add--i">git add -i</h3>
+
+<p>Submitting meaningful commits to your repository makes it easier for your future self and team-mates in understanding how and why changes were 
+brought in. Instead of one gigantic commit that includes all the changes for a feature, splitting up your commits into a single commit per 
+feature allows you to look at meaningful diffs at a commit level. This makes code reviews go smoother as you won’t have to remember why you
+made a change.</p>
+
+<p>Git has the excellent interactive feature which allows you to select a set of changes called a hunk to include in a commit. Git will allow 
+you to split the hunk into smaller pieces to give you a degree of control over which changes to include. However splitting hunks has its limits.
+To get really picky about what goes into the commit, get into patch mode. This allows you line by line control.</p>
+
+<div class="highlight"><pre><code class="language-diff" data-lang="diff"><span class="gh">diff --git a/LinkedList.php b/LinkedList.php  </span>
+     index b7d378f..5fcfce5 100644  
+     --- a/LinkedList.php  
+     +++ b/LinkedList.php  
+     @@ -1,19 +1,24 @@  
+      &lt;?php  
+      class LinkedList  
+      {  
+        private $nodes;  
+       
+        public function __construct($name)  
+        {  
+       
+        }  
+       
+        public function addNode(Node $node)  
+        {  
+     -    $this-&gt;node[] = $node;  
+     +    $this-&gt;node[] = $node;   
+     +  }  
+     +  
+     +  public function traverseList($callback)  
+     +  {  
+     +    // Traverse the list and call the callback  
+        }  
+       
+      }</code></pre></div>
+
+<p>Entering patch mode gives us the following screen:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># Manual hunk edit mode -- see bottom for a quick guide  </span>
+    @@ -13,7 +13,12 @@ class LinkedList  
+      
+       public <span class="k">function</span> addNode<span class="o">(</span>Node <span class="nv">$node</span><span class="o">)</span>  
+       <span class="o">{</span>  
+    -    <span class="nv">$this</span>-&gt;node<span class="o">[]</span> <span class="o">=</span> <span class="nv">$node</span><span class="p">;</span>  
+    +    <span class="nv">$this</span>-&gt;node<span class="o">[]</span> <span class="o">=</span> <span class="nv">$node</span><span class="p">;</span>   
+    +  <span class="o">}</span>  
+    +  
+    +  public <span class="k">function</span> traverseList<span class="o">(</span><span class="nv">$callback</span><span class="o">)</span>  
+    +  <span class="o">{</span>  
+    +    // Traverse the list and call the callback  
+       <span class="o">}</span>  
+      
+     <span class="o">}</span>  
+    <span class="c"># ---  </span>
+    <span class="c"># To remove &#39;-&#39; lines, make them &#39; &#39; lines (context).  </span>
+    <span class="c"># To remove &#39;+&#39; lines, delete them.  </span>
+    <span class="c"># Lines starting with # will be removed.  </span>
+    <span class="c">#  </span>
+    <span class="c"># If the patch applies cleanly, the edited hunk will immediately be  </span>
+    <span class="c"># marked for staging. If it does not apply cleanly, you will be given  </span>
+    <span class="c"># an opportunity to edit again. If all lines of the hunk are removed,  </span>
+    <span class="c"># then the edit is aborted and the hunk is left unchanged.</span></code></pre></div>
+
+    </section>
+        <footer>
+            <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+        </footer>
+    </div>
+
+    <script src="/javascripts/scale.fix.js"></script>
+
+</body>
+</html>
